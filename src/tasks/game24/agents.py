@@ -31,7 +31,8 @@ class AgentIoGame24(Agent):
             params=params,
         )
 
-        proposals = [p[:p.find("=")+4].strip(" .,\n") for p in response]
+        #proposals = [p[:p.find("=")+4].strip(" .,\n") for p in response]
+        proposals = [p.strip(" .,\n") for p in response]
         return proposals
     
 @AgentFactory.register
@@ -54,7 +55,8 @@ class AgentCotGame24(Agent):
             params=params,
         )
 
-        proposals = [p.split("Final answer:")[-1].strip(" .,\n*$") for p in response]
+        #proposals = [p.split("Final answer:")[-1].strip(" .,\n*$") for p in response]
+        proposals = [p.strip(" .,\n*$") for p in response]
         return proposals
         
 
@@ -102,13 +104,54 @@ class AgentActGame24(Agent):
             if state.current_state != "24":
                 response = [response[0].rpartition(")")[0] + ")"]
             proposals.extend(r.strip() for r in response[0].split("\n"))
-            if "Possible next steps:" in proposals:
-                proposals.remove("Possible next steps:")
 
         random.seed(state.randomness)
         random.shuffle(proposals)
         act_cache[prompt].extend(proposals[n:])
         return proposals[:n]
+    
+
+@AgentFactory.register
+class AgentBfsGame24(Agent):
+
+    @staticmethod
+    async def act(
+        model: Model,
+        state: StateGame24,
+        namespace: str,
+        request_id: str,
+        params: DecodingParameters,
+    ) -> List[str]:
+        """
+        Returns a list of actions for the Game of 24 task.
+        """
+        # Format the prompt
+        if state.current_state.strip() == "24":
+            prompt = (
+                prompts.cot.format(input=state.puzzle)
+                + "\nSteps:\n"
+                + "\n".join(state.steps).strip()
+                + "\nAnswer: "
+            )
+
+        else:
+            current_numbers = get_current_numbers(state)
+            prompt = prompts.bfs.format(input=current_numbers)
+
+        # Generate the response
+        response = await model.request(
+            prompt=prompt,
+            n=1,
+            request_id=request_id,
+            namespace=namespace,
+            params=params,
+        )
+
+        # Parse the response
+        if state.current_state != "24":
+            response = [response[0].rpartition(")")[0] + ")"]
+        proposals = [r.strip() for r in response[0].split("\n")]
+        return proposals
 
 
 @AgentFactory.register
@@ -157,51 +200,6 @@ class AgentAggregateGame24(Agent):
         except:
             selected_actions = []
         return selected_actions
-
-
-@AgentFactory.register
-class AgentBfsGame24(Agent):
-
-    @staticmethod
-    async def act(
-        model: Model,
-        state: StateGame24,
-        namespace: str,
-        request_id: str,
-        params: DecodingParameters,
-    ) -> List[str]:
-        """
-        Returns a list of actions for the Game of 24 task.
-        """
-        # Format the prompt
-        if len(state.current_state.strip().split(" ")) == 1:
-            prompt = (
-                prompts.cot.format(input=state.puzzle)
-                + "\nSteps:\n"
-                + "\n".join(state.steps).strip()
-                + "\nAnswer: "
-            )
-
-        else:
-            current_numbers = get_current_numbers(state)
-            prompt = prompts.bfs.format(input=current_numbers)
-
-        # Generate the response
-        response = await model.request(
-            prompt=prompt,
-            n=1,
-            request_id=request_id,
-            namespace=namespace,
-            params=params,
-        )
-
-        # Parse the response
-        if state.current_state != "24":
-            response = [response[0].rpartition(")")[0] + ")"]
-        proposals = [r.strip() for r in response[0].split("\n")]
-        if "Possible next steps:" in proposals:
-            proposals.remove("Possible next steps:")
-        return proposals
 
 
 @AgentFactory.register
@@ -292,7 +290,7 @@ class AgentReactGame24(Agent):
         )
 
         # Parse the response
-        proposals = [r.split("Possible next step:")[-1].strip() for r in responses]
+        proposals = [r.split("Action:")[-1].strip() for r in responses]
         return proposals
 
 

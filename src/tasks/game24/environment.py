@@ -63,21 +63,17 @@ class EnvironmentGame24(Environment):
         Evaluates the current state.
         """
         is_final = EnvironmentGame24.is_final(state)
-        if is_final is True and state.steps[-1]:
+        if is_final and state.steps[-1]:
             expression = state.steps[-1].lower().replace('answer: ', '').split('=')[0]
             numbers = re.findall(r'\d+', expression)
             problem_numbers = re.findall(r'\d+', state.puzzle)
             if sorted(numbers) != sorted(problem_numbers):
-                return True, 0.0
+                return is_final, 0.0
             else:
                 try:
-                    correct = simplify(expression) == 24
-                    return True, float(correct)
+                    score = int(simplify(expression) == 24)
+                    return is_final, float(score)
                 except Exception as e:
-                    return True, 0.0
-
+                    return is_final, 0.0
         else:
-            return False, 0.0
-
-
-            
+            return is_final, 0.0
