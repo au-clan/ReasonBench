@@ -388,3 +388,82 @@ def parse_call(text: str) -> Dict[str, Any]:
         responses.append(body)
 
     return {"user_message": user_message, "N": n_value, "responses": responses}
+
+
+# For a given benchmark-model combo, extract sample-level token vs score relationships
+def extract_sample_data(df, benchmark, model):
+    """Extract per-sample token and score data for a benchmark-model combination."""
+    combo_data = df[(df['Benchmark'] == benchmark) & (df['Model'] == model)]
+    
+    if len(combo_data) == 0:
+        return None
+    
+    # Combine data across all experiments
+    sample_data = []
+    
+    for _, row in combo_data.iterrows():
+        tokens = row['tokens_out']
+        scores = row['scores']
+        
+        # Each sample has a token count and a score
+        if isinstance(tokens, (list, np.ndarray)) and isinstance(scores, (list, np.ndarray)):
+            for sample_idx, (token, score) in enumerate(zip(tokens, scores)):
+                sample_data.append({
+                    'sample_idx': sample_idx,
+                    'tokens': token,
+                    'score': score,
+                    'benchmark': benchmark,
+                    'model': model
+                })
+    
+    return pd.DataFrame(sample_data)
+
+def categorize_samples(df, benchmark, model):
+    """Categorize all samples in a benchmark-model combination by token sensitivity."""
+    sample_data = extract_sample_data(df, benchmark, model)
+    
+    if sample_data is None:
+        return None
+    
+    categories = {
+        'ALWAYS_SUCCEEDS': [],
+        'ALWAYS_FAILS': [],
+        'TOKEN_SENSITIVE_POS': [],
+        'TOKEN_AVERSE': [],
+        'TOKEN_AGNOSTIC': [],
+        'WEAK_DEPENDENCY': []
+    }
+    
+    correlations = []
+    success_rates = []
+    
+    # Analyze each sample
+    for sample_idx in sorted(sample_data['sample_idx'].unique()):
+        sample = sample_data[sample_data['sample_idx'] == sample_idx]
+        
+        success_rate = sample['score'].mean()
+        token_corr = sample['tokens'].corr(sample['score']) if len(sample) > 1 else 0
+        
+        success_rates.append(success_rate)
+        correlations.append(token_corr)
+        
+        # Categorize
+        if success_rate == 1.0:
+            categories['ALWAYS_SUCCEEDS'].append(sample_idx)
+        elif success_rate == 0.0:
+            categories['ALWAYS_FAILS'].append(sample_idx)
+        elif token_corr > 0.3:
+            categories['TOKEN_SENSITIVE_POS'].append(sample_idx)
+        elif token_corr < -0.3:
+            categories['TOKEN_AVERSE'].append(sample_idx)
+        elif abs(token_corr) < 0.1:
+            categories['TOKEN_AGNOSTIC'].append(sample_idx)
+        else:
+            categories['WEAK_DEPENDENCY'].append(sample_idx)
+    
+    return {
+        'categories': categories,
+        'correlations': correlations,
+        'success_rates': success_rates,
+        'num_samples': len(sample_data['sample_idx'].unique())
+    }
