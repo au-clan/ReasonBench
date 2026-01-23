@@ -30,7 +30,7 @@ async def run(args, trial, cache_path):
     cache = Cache(cache_path)
 
     # Model
-    model = OnlineLLM(provider=args.provider)
+    model = OnlineLLM(provider=args.provider, api_key=args.api_key)
 
     # Pipeline
     pipeline = OnlineAPI(
@@ -111,6 +111,7 @@ if __name__ == "__main__":
     parser.add_argument("--value_cache", action="store_true")
 
     parser.add_argument("--provider", type=str)
+    parser.add_argument("--api_key", type=str)
     parser.add_argument("--model", type=str)
     parser.add_argument("--temperature", type=float)
     parser.add_argument("--max_completion_tokens", type=int)
