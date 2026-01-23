@@ -1,3 +1,4 @@
+import os
 import asyncio    
 from typing import List, Any
 from dataclasses import dataclass
@@ -7,8 +8,8 @@ from cachesaver.typedefs import Request, Batch, Response
 from ..typedefs import Model
 
 class OnlineLLM(Model):
-    def __init__(self, provider: str, max_n: int = 128):
-        self.client = client_init(provider)
+    def __init__(self, provider: str, max_n: int = 128, api_key: str=None):
+        self.client = client_init(provider, api_key)
         self.max_n = max_n
 
     async def request(self, request: Request) -> Response:
@@ -19,9 +20,9 @@ class OnlineLLM(Model):
         sleep = 1
 
         prompts = (
-            [{"role": "user", "content": request.prompt}]
-            if isinstance(request.prompt, str)
-            else request.prompt
+            [{"role": "user", "content": request.kwargs["prompt"]}]
+            if isinstance(request.kwargs["prompt"], str)
+            else request.kwargs["prompt"]
         )
 
         while total_n > 0:
@@ -32,19 +33,20 @@ class OnlineLLM(Model):
                 try:
                     completion = await self.client.chat.completions.create(
                         messages=prompts,
-                        model=request.model,
+                        model=request.kwargs["model"],
                         n=current_n,
-                        max_completion_tokens=request.max_completion_tokens or None,
-                        temperature=request.temperature or 1,
-                        stop=request.stop or None,
-                        top_p=request.top_p or 1,
-                        seed=request.seed or None,
-                        logprobs=request.logprobs or False,
-                        top_logprobs=request.top_logprobs or None,
+                        max_completion_tokens=request.kwargs.get("max_completion_tokens") or None,
+                        temperature=request.kwargs.get("temperature", None) or 1,
+                        stop=request.kwargs.get("stop", None) or None,
+                        top_p=request.kwargs.get("top_p", None) or 1,
+                        seed=request.kwargs.get("seed", None) or None,
+                        logprobs=request.kwargs.get("logprobs", None) or False,
+                        top_logprobs=request.kwargs.get("top_logprobs", None) or None,
                     )
                     break
                 except Exception as e:
                     print(f"Error: {e}")
+                    print(f"Sleeping for: {max(sleep, 90)} seconds")
                     await asyncio.sleep(max(sleep, 90))
                     sleep *= 2
 
@@ -59,9 +61,6 @@ class OnlineLLM(Model):
                     pass
             else:
                 cached_tokens = 0
-            
-            print(f"Input tokens: {input_tokens}, Completion tokens: {completion_tokens}, Cached tokens: {cached_tokens}")
-            
 
             results.extend(
                 (choice.message.content, input_tokens, completion_tokens / current_n, cached_tokens)
@@ -76,12 +75,12 @@ class OnlineLLM(Model):
         completions = await asyncio.gather(*requests)
         return completions
     
-def client_init(provider: str) -> Any:
+def client_init(provider: str, api_key: str) -> Any:
     if provider == "openai":
         from openai import AsyncOpenAI
-        return AsyncOpenAI()
+        return AsyncOpenAI(api_key=os.getenv(api_key))
     elif provider == "together":
         from together import AsyncTogether
-        return AsyncTogether()
+        return AsyncTogether(api_key=os.getenv(api_key))
     else:
         raise ValueError(f"Unknown provider: {provider}")

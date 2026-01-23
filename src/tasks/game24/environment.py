@@ -52,7 +52,9 @@ class EnvironmentGame24(Environment):
         if len(state.steps) == 0:
             return False
         expression = state.steps[-1]
-        if "left" in expression or len(state.current_state.split(' '))>1:
+        if "Answer:" in expression:
+            return True
+        elif "left" in expression or len(state.current_state.split(' '))>1:
             return False
         else:
             return True
@@ -64,16 +66,20 @@ class EnvironmentGame24(Environment):
         """
         is_final = EnvironmentGame24.is_final(state)
         if is_final and state.steps[-1]:
-            expression = state.steps[-1].lower().replace('answer: ', '').split('=')[0]
+            expression = state.steps[-1].split("\n")[-1]
+            expression = expression.lower().replace('answer: ', '').split('=')[0]
             numbers = re.findall(r'\d+', expression)
             problem_numbers = re.findall(r'\d+', state.puzzle)
             if sorted(numbers) != sorted(problem_numbers):
+                
                 return is_final, 0.0
+                
             else:
                 try:
                     score = int(simplify(expression) == 24)
                     return is_final, float(score)
                 except Exception as e:
+                    print(e)
                     return is_final, 0.0
         else:
             return is_final, 0.0

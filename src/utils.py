@@ -380,7 +380,16 @@ def final_logging(
     logger.info("Individual durations of each sample (in seconds): %s\n", list(durations))
 
     # Evaluations
-    correct = [max(agent_result[1] for agent_result in e) for e in evaluations]
+    correct = []
+    for e in evaluations:
+        print(e)
+        if e:
+            r = max(agent_result[1] for agent_result in e)
+        else:
+            r = 0
+        correct.append(r)
+
+    #correct = [max(agent_result[1] for agent_result in e) for e in evaluations]
     logger.info("Correct: %s", correct)
     logger.info("Average correctness: %f", sum(correct) / len(correct))
 

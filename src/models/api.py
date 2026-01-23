@@ -75,16 +75,20 @@ class API(ABC):
         Send a request to the pipeline
         """
         request = Request(
-            prompt=prompt,
+            args="",
+            kwargs = {
+                "prompt": prompt,
+                "model": self.model,
+                "max_completion_tokens": params.max_completion_tokens,
+                "temperature": params.temperature,
+                "top_p": params.top_p,
+                "stop": params.stop,
+                "logprobs": params.logprobs
+            },
             n=n,
             request_id=request_id,
             namespace=namespace,
-            model=self.model,
-            max_completion_tokens=params.max_completion_tokens,
-            temperature=params.temperature,
-            top_p=params.top_p,
-            stop=params.stop,
-            logprobs=params.logprobs
+            
         )
 
         start = time.perf_counter()

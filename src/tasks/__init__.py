@@ -1,6 +1,6 @@
 from .game24 import *
 from .hle import *
-from .hotpotqa import *
+#from .hotpotqa import *
 from .humaneval import *
 #from .logiqa import *
 #from .matharena import *

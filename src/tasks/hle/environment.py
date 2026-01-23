@@ -1,4 +1,5 @@
 import re
+import os
 import random
 from typing import Tuple, Literal
 from pydantic import BaseModel
@@ -14,7 +15,7 @@ from openai import OpenAI
 OBS_CORRECT = "Answer is CORRECT."
 OBS_INCORRECT = "Answer is INCORRECT."
 
-client = OpenAI(timeout=300, max_retries=1)
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY_CLAN"), timeout=300, max_retries=1)
 JUDGE_MODEL = "gpt-4.1-nano"
 
 

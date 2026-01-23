@@ -32,6 +32,7 @@ class AgentIoGame24(Agent):
         )
 
         #proposals = [p[:p.find("=")+4].strip(" .,\n") for p in response]
+        print(response[0])
         proposals = [p.strip(" .,\n") for p in response]
         return proposals
     
@@ -46,7 +47,7 @@ class AgentCotGame24(Agent):
             params: DecodingParameters,
     )-> List[str]:
         
-        prompt = prompts.cot_.format(input=state.puzzle)
+        prompt = prompts.cot.format(input=state.puzzle)
         response = await model.request(
             prompt=prompt,
             n=n,
@@ -54,7 +55,8 @@ class AgentCotGame24(Agent):
             namespace=namespace,
             params=params,
         )
-
+        #print(prompt)
+        print(response[0])
         #proposals = [p.split("Final answer:")[-1].strip(" .,\n*$") for p in response]
         proposals = [p.strip(" .,\n*$") for p in response]
         return proposals
@@ -75,21 +77,22 @@ class AgentActGame24(Agent):
         # Format the prompt
         if state.current_state == "24":
             prompt = (
-                prompts.cot.format(input=state.puzzle)
-                + "\nSteps:\n"
+                prompts.expression.format(input=state.puzzle)
+                + "Steps:\n"
                 + "\n".join(state.steps)
-                + "\nAnswer: "
+                + "\nAnswer:"
             )
         else:
             current_numbers = get_current_numbers(state)
             prompt = prompts.bfs.format(input=current_numbers)
 
+        
+        proposals = []
+        act_cache[prompt] = []
+        
         if prompt in act_cache:
             proposals = act_cache[prompt][:n]
             act_cache[prompt] = act_cache[prompt][n:]
-        else:
-            proposals = []
-            act_cache[prompt] = []
 
         while len(proposals) < n:
             # Generate the response
@@ -100,6 +103,8 @@ class AgentActGame24(Agent):
                 namespace=namespace,
                 params=params,
             )
+            print(prompt, "\n")
+            print("h", response[0])
             # Parse the response
             if state.current_state != "24":
                 response = [response[0].rpartition(")")[0] + ")"]
@@ -107,7 +112,8 @@ class AgentActGame24(Agent):
 
         random.seed(state.randomness)
         random.shuffle(proposals)
-        act_cache[prompt].extend(proposals[n:])
+        if state.current_state == "24":
+            act_cache[prompt].extend(proposals[n:])
         return proposals[:n]
     
 
@@ -128,10 +134,9 @@ class AgentBfsGame24(Agent):
         # Format the prompt
         if state.current_state.strip() == "24":
             prompt = (
-                prompts.cot.format(input=state.puzzle)
-                + "\nSteps:\n"
+                prompts.expression.format(input=state.puzzle)
+                + "Steps:\n"
                 + "\n".join(state.steps).strip()
-                + "\nAnswer: "
             )
 
         else:
@@ -271,10 +276,9 @@ class AgentReactGame24(Agent):
         # Format the prompt
         if state.current_state == "24":
             prompt = (
-                prompts.cot.format(input=state.puzzle)
-                + "\nSteps:\n"
+                prompts.expression.format(input=state.puzzle)
+                + "Steps:\n"
                 + "\n".join(state.steps)
-                + "\nAnswer: "
             )
         else:
             current_numbers = get_current_numbers(state)
@@ -314,7 +318,6 @@ class AgentRapGame24(Agent):
                 prompts.cot.format(input=state.puzzle)
                 + "\nSteps:\n"
                 + "\n".join(state.steps)
-                + "\nAnswer: "
             )
         else:
             current_numbers = get_current_numbers(state)
