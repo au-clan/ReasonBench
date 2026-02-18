@@ -24,8 +24,9 @@ tot_bfs:
 
 tot_dfs:
   num_selections: 3
-  num_steps: 1
+  num_steps: 6
   num_evaluations: 3
+  pruning_threshold: 0.05
   max_iterations: 10
   
 got:
@@ -43,3 +44,4 @@ rap:
   num_samples: 5
   num_evaluations: 3
   exploration_constant: 1.0
+  max_depth: 10

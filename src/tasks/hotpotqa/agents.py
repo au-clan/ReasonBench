@@ -31,7 +31,13 @@ class AgentIoHotpotQA(Agent):
                 namespace=namespace,
                 params=params,
             )
-        proposals = [r.strip() for r in responses]
+        proposals = []
+        for r in responses:
+            try:
+                proposal = r.strip()
+                proposals.append(proposal)
+            except:
+                continue
         return proposals
     
 @AgentFactory.register

@@ -31,7 +31,9 @@ class AgentIoGame24(Agent):
             params=params,
         )
 
-        proposals = [p[:p.find("=")+4].strip(" .,\n") for p in response]
+        #proposals = [p[:p.find("=")+4].strip(" .,\n") for p in response]
+        print(response[0])
+        proposals = [p.strip(" .,\n") for p in response]
         return proposals
     
 @AgentFactory.register
@@ -45,7 +47,7 @@ class AgentCotGame24(Agent):
             params: DecodingParameters,
     )-> List[str]:
         
-        prompt = prompts.cot_.format(input=state.puzzle)
+        prompt = prompts.cot.format(input=state.puzzle)
         response = await model.request(
             prompt=prompt,
             n=n,
@@ -53,8 +55,10 @@ class AgentCotGame24(Agent):
             namespace=namespace,
             params=params,
         )
-
-        proposals = [p.split("Final answer:")[-1].strip(" .,\n*$") for p in response]
+        #print(prompt)
+        print(response[0])
+        #proposals = [p.split("Final answer:")[-1].strip(" .,\n*$") for p in response]
+        proposals = [p.strip(" .,\n*$") for p in response]
         return proposals
         
 
@@ -73,21 +77,22 @@ class AgentActGame24(Agent):
         # Format the prompt
         if state.current_state == "24":
             prompt = (
-                prompts.cot.format(input=state.puzzle)
-                + "\nSteps:\n"
+                prompts.expression.format(input=state.puzzle)
+                + "Steps:\n"
                 + "\n".join(state.steps)
-                + "\nAnswer: "
+                + "\nAnswer:"
             )
         else:
             current_numbers = get_current_numbers(state)
             prompt = prompts.bfs.format(input=current_numbers)
 
+        
+        proposals = []
+        act_cache[prompt] = []
+        
         if prompt in act_cache:
             proposals = act_cache[prompt][:n]
             act_cache[prompt] = act_cache[prompt][n:]
-        else:
-            proposals = []
-            act_cache[prompt] = []
 
         while len(proposals) < n:
             # Generate the response
@@ -98,17 +103,60 @@ class AgentActGame24(Agent):
                 namespace=namespace,
                 params=params,
             )
+            print(prompt, "\n")
+            print("h", response[0])
             # Parse the response
             if state.current_state != "24":
                 response = [response[0].rpartition(")")[0] + ")"]
             proposals.extend(r.strip() for r in response[0].split("\n"))
-            if "Possible next steps:" in proposals:
-                proposals.remove("Possible next steps:")
 
         random.seed(state.randomness)
         random.shuffle(proposals)
-        act_cache[prompt].extend(proposals[n:])
+        if state.current_state == "24":
+            act_cache[prompt].extend(proposals[n:])
         return proposals[:n]
+    
+
+@AgentFactory.register
+class AgentBfsGame24(Agent):
+
+    @staticmethod
+    async def act(
+        model: Model,
+        state: StateGame24,
+        namespace: str,
+        request_id: str,
+        params: DecodingParameters,
+    ) -> List[str]:
+        """
+        Returns a list of actions for the Game of 24 task.
+        """
+        # Format the prompt
+        if state.current_state.strip() == "24":
+            prompt = (
+                prompts.expression.format(input=state.puzzle)
+                + "Steps:\n"
+                + "\n".join(state.steps).strip()
+            )
+
+        else:
+            current_numbers = get_current_numbers(state)
+            prompt = prompts.bfs.format(input=current_numbers)
+
+        # Generate the response
+        response = await model.request(
+            prompt=prompt,
+            n=1,
+            request_id=request_id,
+            namespace=namespace,
+            params=params,
+        )
+
+        # Parse the response
+        if state.current_state != "24":
+            response = [response[0].rpartition(")")[0] + ")"]
+        proposals = [r.strip() for r in response[0].split("\n")]
+        return proposals
 
 
 @AgentFactory.register
@@ -157,51 +205,6 @@ class AgentAggregateGame24(Agent):
         except:
             selected_actions = []
         return selected_actions
-
-
-@AgentFactory.register
-class AgentBfsGame24(Agent):
-
-    @staticmethod
-    async def act(
-        model: Model,
-        state: StateGame24,
-        namespace: str,
-        request_id: str,
-        params: DecodingParameters,
-    ) -> List[str]:
-        """
-        Returns a list of actions for the Game of 24 task.
-        """
-        # Format the prompt
-        if len(state.current_state.strip().split(" ")) == 1:
-            prompt = (
-                prompts.cot.format(input=state.puzzle)
-                + "\nSteps:\n"
-                + "\n".join(state.steps).strip()
-                + "\nAnswer: "
-            )
-
-        else:
-            current_numbers = get_current_numbers(state)
-            prompt = prompts.bfs.format(input=current_numbers)
-
-        # Generate the response
-        response = await model.request(
-            prompt=prompt,
-            n=1,
-            request_id=request_id,
-            namespace=namespace,
-            params=params,
-        )
-
-        # Parse the response
-        if state.current_state != "24":
-            response = [response[0].rpartition(")")[0] + ")"]
-        proposals = [r.strip() for r in response[0].split("\n")]
-        if "Possible next steps:" in proposals:
-            proposals.remove("Possible next steps:")
-        return proposals
 
 
 @AgentFactory.register
@@ -273,10 +276,9 @@ class AgentReactGame24(Agent):
         # Format the prompt
         if state.current_state == "24":
             prompt = (
-                prompts.cot.format(input=state.puzzle)
-                + "\nSteps:\n"
+                prompts.expression.format(input=state.puzzle)
+                + "Steps:\n"
                 + "\n".join(state.steps)
-                + "\nAnswer: "
             )
         else:
             current_numbers = get_current_numbers(state)
@@ -292,7 +294,7 @@ class AgentReactGame24(Agent):
         )
 
         # Parse the response
-        proposals = [r.split("Possible next step:")[-1].strip() for r in responses]
+        proposals = [r.split("Action:")[-1].strip() for r in responses]
         return proposals
 
 
@@ -316,7 +318,6 @@ class AgentRapGame24(Agent):
                 prompts.cot.format(input=state.puzzle)
                 + "\nSteps:\n"
                 + "\n".join(state.steps)
-                + "\nAnswer: "
             )
         else:
             current_numbers = get_current_numbers(state)

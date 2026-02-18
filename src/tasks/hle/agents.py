@@ -29,8 +29,14 @@ class AgentIoHLE(Agent):
                 namespace=namespace,
                 params=params,
             )
-        proposals = [r.split("Final Answer:")[-1].strip() for r in responses]
-        return responses
+        proposals = []
+        for p in responses:
+            try:
+                proposal = p.split("Final Answer:")[-1].strip()
+                proposals.append(proposal)
+            except:
+                continue
+        return proposals
     
 @AgentFactory.register
 class AgentCotHLE(Agent):

@@ -163,8 +163,6 @@ class MethodRAP(Method):
         best_actions = []
 
         for iteration in range(self.num_iterations):
-            if iteration % 5 == 0:
-                print(f"Step: {iteration} ({idx})")
             logger.debug(f"\nMCTS Iteration {iteration + 1}/{self.num_iterations}")
             
             logger.debug("Starting selection phase")

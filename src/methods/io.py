@@ -50,5 +50,14 @@ class MethodIO(Method):
         actions = await asyncio.gather(*action_coroutines)
 
         # Execute the actions
-        states = [self.env.step(state, action[0]) for state, action in zip(states, actions)]
+        new_states = []
+
+        for state, action in zip(states, actions):
+            try:
+                new_states.append(self.env.step(state, action[0]))
+            except Exception as e:
+                print(f"Step failed: {e}")
+                new_states.append(state)  # or whatever fallback you want
+
+        states = new_states
         return states

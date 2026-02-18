@@ -42,8 +42,6 @@ class MethodTOT_BFS(Method):
 
         for step in range(self.num_steps):
 
-            print(f"Step {step} ({idx})")
-
             # Generate actions for each state
             action_coroutines = [
                 self.step_agent.act(

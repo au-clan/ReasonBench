@@ -75,21 +75,29 @@ class API(ABC):
         Send a request to the pipeline
         """
         request = Request(
-            prompt=prompt,
+            args="",
+            kwargs = {
+                "prompt": prompt,
+                "model": self.model,
+                "max_completion_tokens": params.max_completion_tokens,
+                "temperature": params.temperature,
+                "top_p": params.top_p,
+                "stop": params.stop,
+                "logprobs": params.logprobs
+            },
             n=n,
             request_id=request_id,
             namespace=namespace,
-            model=self.model,
-            max_completion_tokens=params.max_completion_tokens,
-            temperature=params.temperature,
-            top_p=params.top_p,
-            stop=params.stop,
-            logprobs=params.logprobs
+            
         )
 
         start = time.perf_counter()
         response = await self.pipeline.request(request)
         end = time.perf_counter()
+
+        # TODO: FIX this hacky way of getting the tab name 
+        tab = request_id.split("-")[0]
+        assert tab.startswith("idx"), "Request ID must start with 'idx': found {request_id}"
 
         # Update tabs
         self.tabs.add(tab)
@@ -113,7 +121,7 @@ class API(ABC):
         cached_in = cached_out = 0
         duplicated_in = 0 # deduplicator saves only on input
 
-        for in_tok, out_tok, cached_tok, cached, duplicated in zip(tokin, tokcached, tokout, response.cached, response.duplicated):
+        for in_tok, out_tok, cached_tok, cached, duplicated in zip(tokin, tokout, tokcached, response.cached, response.duplicated):
 
             total_in += in_tok
             total_out += out_tok

@@ -48,13 +48,13 @@ class MethodFOA(Method):
 
         # Records of previously visited states (state_identifier, state_value, state)
         visited_states = [("INIT", self.origin, state)]
+        initial_state = state
 
         # Initialize state for each agent
         states = [state.clone(randomness=random.randint(0, MAX_SEED)) for _ in range(self.num_agents)]
 
         solved = False
         for step in range(self.num_steps):
-            print(f"Step {step} ({idx})")
 
             if solved:
                 break
@@ -120,5 +120,8 @@ class MethodFOA(Method):
                 # Resampling
                 states, resampled_idxs = resampler.resample(visited_states, self.num_agents, self.resampling)
 
-        return states
+        if len(states) == 0:
+            return [initial_state]
+        else:
+            return states
     

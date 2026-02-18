@@ -1,4 +1,9 @@
+import json
+import hashlib
+from diskcache import Cache
+
 import re
+import os
 import random
 from typing import Tuple, Literal
 from pydantic import BaseModel
@@ -14,8 +19,9 @@ from openai import OpenAI
 OBS_CORRECT = "Answer is CORRECT."
 OBS_INCORRECT = "Answer is INCORRECT."
 
-client = OpenAI(timeout=300, max_retries=1)
-JUDGE_MODEL = "gpt-4.1-nano"
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY_CLAN"), timeout=300, max_retries=1)
+cache = Cache(".cache/judge_cache")  # folder on disk
+JUDGE_MODEL = "o3-mini"
 
 
 @EnvironmentFactory.register
@@ -111,21 +117,28 @@ class ExtractedAnswer(BaseModel):
 def extract_answer(question, correct_answer, response):
     prompt = JUDGE_PROMPT.format(question=question, correct_answer=correct_answer, response=response)
     try:
-        response = client.beta.chat.completions.parse(
-                model=JUDGE_MODEL,
-                max_completion_tokens=4096, # overkill for judge
-                messages=[
-                    {"role": "user", "content": prompt}
-                ],
-                response_format=ExtractedAnswer, 
-            ) 
-        content = response.choices[0].message.parsed
+        key = prompt_cache_key(prompt)
+        content = cache.get(key)
+        if content is None:
+            response = client.beta.chat.completions.parse(
+                    model=JUDGE_MODEL,
+                    max_completion_tokens=4096, # overkill for judge
+                    temperature=1.0,
+                    messages=[
+                        {"role": "user", "content": prompt}
+                    ],
+                    response_format=ExtractedAnswer, 
+                ) 
+            content = response.choices[0].message.parsed
+            content = [content.extracted_final_answer, content.reasoning, content.correct, content.confidence]
+            cache.set(key, content)
+
         return { 
             "correct_answer": correct_answer,
-            "model_answer": content.extracted_final_answer,
-            "reasoning": content.reasoning,
-            "correct": content.correct,
-            "confidence": content.confidence
+            "model_answer": content[0],
+            "reasoning": content[1],
+            "correct": content[2],
+            "confidence": content[3]
         }
     except Exception as e: # very, very rare
         print("Error:", e)
@@ -166,3 +179,10 @@ def parse_action(string: str) -> Tuple[str, str]:
     
 #     else:
 #         return 'Invalid Action. Valid Actions are Analyze[<topic>], Explain[<aspect>], and Finish[<answer>].'
+
+def normalize_prompt(prompt: str) -> str:
+    return " ".join(prompt.strip().split())
+
+def prompt_cache_key(prompt: str) -> str:
+    normalized = normalize_prompt(prompt)
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()

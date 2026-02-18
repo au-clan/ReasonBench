@@ -2,15 +2,17 @@
 ###---Prompts---###
 ###################
 
-io = """Return the solution of the following question answering task. Do not include any explanations or intermediate steps, simply return the final answer. The final answer should be given in the exact following format: "Finish[...]" where ... denotes your final answer.
+# adapted from: https://github.com/noahshinn/reflexion/blob/main/hotpotqa_runs/prompts.py#L3
+io = """Solve a question answering task. Finish[answer] returns the answer and finishes the task. The final answer should be given in the exact following format: "Finish[answer]".
 
 Question: {question}
 """
 
-cot = """Return the solution of the following question answering task with step-by-step reasoning. The reasoning steps should be clear and specific, leading to the final answer. The final answer should be given in the exact following format: "Finish[answer]".
+# adapted from: https://github.com/noahshinn/reflexion/blob/main/hotpotqa_runs/prompts.py#L3
+cot = """Solve a question answering task by having a Thought, then Finish with your answer. Thought can reason about the current situation. Finish[answer] returns the answer and finishes the task. The final answer should be given in the exact following format: "Finish[answer]".
 
-Questions: {question}
-"""
+Question: {question}"""
+
 act = """Solve a question answering task with sequential Action steps. Action can be three types:
 
 (1) Search[entity], which searches the exact entity on Wikipedia and returns the first paragraph if it exists. If not, it will return some similar entities to search.
@@ -29,6 +31,7 @@ Remember, your task is to find the immediate next action. Answer in the format g
 Question: {question}
 {current_state}"""
 
+# source: https://github.com/noahshinn/reflexion/blob/218cf0ef1df84b05ce379dd4a8e47f17766733a0/hotpotqa_runs/prompts.py#L90
 react = """Solve a question answering task with interleaving Thought and Action steps. Thought can reason about the current situation, and Action can be three types:
 
 (1) Search[entity], which searches the exact entity on Wikipedia and returns the first paragraph if it exists. If not, it will return some similar entities to search.
@@ -47,6 +50,7 @@ Remember, your task is to find the immediate next thought and action. Answer the
 Question: {question}
 {current_state}"""
 
+# adapted based on: https://github.com/noahshinn/reflexion/blob/218cf0ef1df84b05ce379dd4a8e47f17766733a0/hotpotqa_runs/prompts.py#L90
 bfs = """We're solving a question answering task with sequential Action steps. Your task is to propose multiple possible next actions given the current trajectory. Action can be three types:
 
 (1) Search[entity], which searches the exact entity on Wikipedia and returns the first paragraph if it exists. If not, it will return some similar entities to search.
@@ -70,6 +74,7 @@ Question: {question}
 Possible Actions:
 """
 
+# adapted based on: https://github.com/noahshinn/reflexion/blob/218cf0ef1df84b05ce379dd4a8e47f17766733a0/hotpotqa_runs/prompts.py#L90
 evaluate = '''Analyze the trajectories of a solution to a question answering
 task. The trajectories are labeled by environmental observations about the situation, thoughts that can reason about the current situation and actions that can be three types: 
 (1) Search[entity]: In this case, your evaluation should be influenced based on whether useful information is found in the resulting observation.

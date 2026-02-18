@@ -2,7 +2,7 @@ SIMPLE_CHAT_INSTRUCTION = "You are a programming assistant. You will be given a 
 
 SIMPLE_CHAT_INSTRUCTION_V2 = """You are an AI that only responds with only {lang} code. You will be given a function signature and its docstring by the user. Write your full implementation (restate the function signature exactly as given)."""
 
-io = """You are an AI that only responds with only {lang} code. You will be given a function signature and its docstring by the user. Write your full implementation (restate the function signature exactly as given). Simply return the implementation without any explanations, introductions, conclusions or thoughts.
+io = """You are an AI that only responds with only {lang} code. You will be given a function signature and docstring. You should fill in the following text of the missing function body. For example, the first line of the completion should have 4 spaces for the indendation so that it fits syntactically with the preceding signature."
 """
 
 cot = '''You are a programming assistant for {lang} code. You will be given a function signature and docstring by the user. You should think step by step and plan your implementation carefully. Once that's done, you should write the code to implement the function. Write your full implementation (restate the function signature exactly as given). Give your answer in the following format: "Final answer:\n..." where "..." is the full implementation of the function.
@@ -74,13 +74,13 @@ Mark the start and end of each implementation using triple backticks, like this:
 Each implementation should be fully contained within its own set of backticks, without any additional markers.
 """
 
-react = """You are a programming assistant solving a coding task. Think step by step and plan your implementation carefully. You will be given a function signature and docstring, and you need to implement the function.
+react = """You are a programming assistant. You will be given a function signature and docstring as well as the current implementation.
 
-For each step:
-1. Think about what needs to be done
-2. Write code to implement that step
-3. Consider edge cases and error handling
+You are only allowed to execute one step and that step can be either:
+    1. Thought: Think about what needs to be done
+    2. Action: Write code to implement the function
 
+Below is an example with multiple potential steps. 
 Example:
 Function signature and docstring:
 def add_numbers(a: int, b: int) -> int:
@@ -111,7 +111,8 @@ Function signature and docstring:
 Current implementation:
 {current_state}
 
-Remember to think step by step and write clear, efficient code."""
+Remember, you are only allowed to perform one step and that can be either a Thought or an Action.
+"""
 
 self_evaluate_step = '''You are evaluating a reasoning step in a code generation task. Given the function signature, current implementation, and the proposed step, determine if this step is correct and logical. Consider:
 1. Is the code syntactically correct?

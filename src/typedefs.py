@@ -5,20 +5,20 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from omegaconf import OmegaConf
 from cachesaver.typedefs import Batch, Response, SingleRequestModel, BatchRequestModel
-from cachesaver.typedefs import Request as CacheSaverRequest
+from cachesaver.typedefs import Request #as CacheSaverRequest
 from torch.utils.data import Dataset
 from src.utils import timed
 
 MAX_SEED = 10000
 
-@dataclass(frozen=True)
-class Request(CacheSaverRequest):# Clean this up
-    model: str
-    max_completion_tokens: Optional[int]=None
-    temperature: Optional[float]=1.0
-    top_p: Optional[float]=1.0
-    stop: Optional[str]=None
-    logprobs: Optional[bool]=False
+# @dataclass(frozen=True)
+# class Request(CacheSaverRequest):# Clean this up
+#     model: str
+#     max_completion_tokens: Optional[int]=None
+#     temperature: Optional[float]=1.0
+#     top_p: Optional[float]=1.0
+#     stop: Optional[str]=None
+#     logprobs: Optional[bool]=False
 
 class DecodingParameters(NamedTuple):
     max_completion_tokens: int

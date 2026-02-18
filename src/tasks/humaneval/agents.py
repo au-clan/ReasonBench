@@ -30,7 +30,13 @@ class AgentIoHumanEval(Agent):
                 namespace=namespace,
                 params=params,
             )
-        proposals = [r.split("Final answer:")[-1].strip().removeprefix("```python").removesuffix("```").strip() for r in responses]
+        proposals = []
+        for r in responses:
+            try:
+                proposal = r.split("Final answer:")[-1].strip().removeprefix("```python").removesuffix("```").strip()
+                proposals.append(proposal)
+            except:
+                continue
         return proposals
     
 @AgentFactory.register

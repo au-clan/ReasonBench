@@ -5,6 +5,7 @@ import random
 import logging
 
 import numpy as np 
+import pandas as pd
 
 from argparse import Namespace
 from omegaconf import OmegaConf
@@ -83,6 +84,24 @@ def tokens2cost(tokens: dict, model_name: str) -> dict:
         "gpt-5-nano": {"in": 0.05, "out": 0.40},
         "gpt-5-mini": {"in": 0.25, "out": 2.00},
         "gpt-5": {"in": 1.25, "out": 10.00},
+
+        # DeepSeek models (Together AI)
+        "deepseek-ai/DeepSeek-V3": {"in": 1.25, "out": 1.25},
+        "deepseek-ai/DeepSeek-R1": {"in": 3.00, "out": 7.00},
+
+        # OSS models (Together AI)
+        "openai/gpt-oss-20b" : {"in": 0.05, "out": 0.20},
+        "openai/gpt-oss-120b": {"in": 0.15, "out": 0.60},
+
+        # Qwen models (Together)
+        "Qwen/Qwen3-235B-A22B-Thinking-2507": {"in": 0.65, "out": 3.00},
+
+        # Gemini models (Gemini)
+        "gemini-3-flash-preview": {"in": 0.50, "out": 3.00},
+        "gemini-2.5-flash-preview-09-2025": {"in": 0.30, "out": 2.50},
+
+        # Anthropic models (Claude)
+        "claude-haiku-4-5-20251001": {"in": 1.00, "out": 5.00},
 
 
     }
@@ -266,26 +285,26 @@ def initial_logging(
     logger.addHandler(f_handler)
     logger.setLevel(logging.INFO)
 
-    #logger.info("Script: simple.py")
-    logger.info("Description: Solve a specified task using a specified method.\n")
-
     logger.info("General information:")
-    logger.info("\tMethod: %s", args.method)
-    logger.info("\tBenchmark: %s", args.benchmark)
-    logger.info("\tSplit: %s", args.split)
-    logger.info("\tDataset Path: %s", args.dataset_path)
-    logger.info("\tUsing method's internal cache: %s\n", args.value_cache)
+    logger.info("\tMethod: '%s'", args.method)
+    logger.info("\tBenchmark: '%s'", args.benchmark)
+    logger.info("\tSplit: '%s'", args.split)
+    logger.info("\tDataset Path: '%s'", args.dataset_path)
+    logger.info("\tUsing method's internal cache: %s\n", bool(args.value_cache))
 
     logger.info("Method Configuration:")
     config = OmegaConf.load(f"scripts/configs/{args.benchmark}.yaml")[args.method]
     for key, value in config.items():
-        logger.info(f"\t{key}: {value}")
+        if isinstance(value, str):
+            logger.info(f"\t{key}: '{value}'")
+        else:
+            logger.info(f"\t{key}: {value}")
     logger.info("\n")
     
 
     logger.info("LLM Information:")
-    logger.info("\tProvider: %s", args.provider)
-    logger.info("\tModel: %s", args.model)
+    logger.info("\tProvider: '%s'", args.provider)
+    logger.info("\tModel: '%s'", args.model)
     logger.info("\tTemperature: %f", args.temperature)
     logger.info("\tMax Completion Tokens: %d", args.max_completion_tokens)
     logger.info("\tTop-p: %f", args.top_p)
@@ -309,9 +328,9 @@ def final_logging(
 
 
     if len(api.tabs) > 1:
-        logger.info("API Detailed Information (per tab)")
-        for tab in api.tabs:
-            logger.info(f"\tTab: {tab}")
+        logger.info("API Detailed Information (per tab):")
+        for tab in sorted(api.tabs):
+            logger.info(f"\tTab-{tab}:")
 
             # Latency
             latencies = api.latencies[tab]
@@ -319,7 +338,7 @@ def final_logging(
 
             # Reuse
             reuse = api.reuse[tab]
-            logger.info("\t\tReuse (number of uses): %s\n", reuse.values())
+            logger.info("\t\tReuse (number of uses): %s\n", [v for v in reuse.values()])
 
             # Calls
             calls = api.calls[tab]
@@ -329,60 +348,59 @@ def final_logging(
 
             # Tokens
             tokens = api.tokens[tab]
-            logger.info("\t\tTokens (total): in %s, out %s cached %s", tokens["total"]["in"], tokens["total"]["out"], tokens["total"]["cached"])
-            logger.info("\t\tTokens (saved by cacher): in %s, out %s", tokens["cacher"]["in"], tokens["cacher"]["out"])
-            logger.info("\t\tTokens (saved by deduplicator): in %s, out %s\n", tokens["duplicator"]["in"], tokens["duplicator"]["out"])
+            logger.info("\t\tTokens (total): %s", {"in": tokens["total"]["in"], "out": tokens["total"]["out"], "cached": tokens["total"]["cached"]})
+            logger.info("\t\tTokens (saved by cacher): %s", {"in": tokens["cacher"]["in"], "out": tokens["cacher"]["out"]})
+            logger.info("\t\tTokens (saved by deduplicator): %s\n", {"in": tokens["duplicator"]["in"], "out": tokens["duplicator"]["out"]})
 
             # Cost
             cost = {key: tokens2cost(tokens[key], api.model) for key in tokens.keys()}
-            logger.info("\t\tCost (total): in $%f, out $%f, total $%f", cost["total"]["in"], cost["total"]["out"], cost["total"]["total"])
-            logger.info("\t\tCost (saved by cacher): in $%f, out $%f, total $%f", cost["cacher"]["in"], cost["cacher"]["out"], cost["cacher"]["total"])
-            logger.info("\t\tCost (saved by deduplicator): in $%f, out $%f, total $%f\n", cost["duplicator"]["in"], cost["duplicator"]["out"], cost["duplicator"]["total"])
-
-        # Moving to API Summed Information
-        logger.info("API Summed Information (all tabs)")
-    else:
-        logger.info("API Information")
+            logger.info("\t\tCost (total): %s", {"in": cost["total"]["in"], "out": cost["total"]["out"], "total": cost["total"]["total"]})
+            logger.info("\t\tCost (saved by cacher): %s", {"in": cost["cacher"]["in"], "out": cost["cacher"]["out"], "total": cost["cacher"]["total"]})
+            logger.info("\t\tCost (saved by deduplicator): %s\n", {"in": cost["duplicator"]["in"], "out": cost["duplicator"]["out"], "total": cost["duplicator"]["total"]})
     
 
+    # All tab information
+    logger.info("All Tabs:")
     # Latency
     all_latencies = [lat for tab in api.tabs for lat in api.latencies[tab]]
-    logger.info("\tSummed Latencies (in seconds): %s\n", all_latencies)
+    logger.info("\tLatencies (in seconds): %s\n", all_latencies)
 
     # Reuse
     all_reuse = {key: sum(api.reuse[tab].get(key, 0) for tab in api.tabs) for tab in api.tabs for key in api.reuse[tab].keys()}
-    logger.info("\tSummed Reuse (number of uses): %s\n", all_reuse.values())
+    logger.info("\tReuse (number of uses): %s\n", [v for v in all_reuse.values()])
 
     # Calls
     all_calls = {key: sum(api.calls[tab][key] for tab in api.tabs) for key in ["total", "cacher", "deduplicator"]}
-    logger.info("\tSummed Calls (total): %s", all_calls["total"])
-    logger.info("\tSummed Calls (saved by cacher): %s", all_calls["cacher"])
-    logger.info("\tSummed Calls (saved by deduplicator): %s\n", all_calls["deduplicator"])
+    logger.info("\tCalls (total): %s", all_calls["total"])
+    logger.info("\tCalls (saved by cacher): %s", all_calls["cacher"])
+    logger.info("\tCalls (saved by deduplicator): %s\n", all_calls["deduplicator"])
 
     # Tokens
     all_tokens = {key: {"in": sum(api.tokens[tab][key]["in"] for tab in api.tabs), "out": sum(api.tokens[tab][key]["out"] for tab in api.tabs)} for key in ["total", "cacher", "duplicator"]}
     all_tokens["total"].update({"cached": sum(api.tokens[tab]["total"]["cached"] for tab in api.tabs)})
-    logger.info("\tSummed Tokens (total): in %s, out %s, cached %s", all_tokens["total"]["in"], all_tokens["total"]["out"], all_tokens["total"]["cached"])
-    logger.info("\tSummed Tokens (saved by cacher): in %s, out %s", all_tokens["cacher"]["in"], all_tokens["cacher"]["out"])
-    logger.info("\tSummed Tokens (saved by deduplicator): in %s, out %s\n", all_tokens["duplicator"]["in"], all_tokens["duplicator"]["out"])
+    logger.info("\tTokens (total): %s", {"in": all_tokens["total"]["in"], "out": all_tokens["total"]["out"], "cached": all_tokens["total"]["cached"]})
+    logger.info("\tTokens (saved by cacher): %s", {"in": all_tokens["cacher"]["in"], "out": all_tokens["cacher"]["out"]})
+    logger.info("\tTokens (saved by deduplicator): %s\n", {"in": all_tokens["duplicator"]["in"], "out": all_tokens["duplicator"]["out"]})
 
     # Cost
     all_cost = {key: tokens2cost(all_tokens[key], api.model) for key in all_tokens.keys()}
-    logger.info("\tSummed Cost (total): in $%f, out $%f, total $%f", all_cost["total"]["in"], all_cost["total"]["out"], all_cost["total"]["total"])
-    logger.info("\tSummed Cost (saved by cacher): in $%f, out $%f, total $%f", all_cost["cacher"]["in"], all_cost["cacher"]["out"], all_cost["cacher"]["total"])
-    logger.info("\tSummed Cost (saved by deduplicator): in $%f, out $%f, total $%f\n", all_cost["duplicator"]["in"], all_cost["duplicator"]["out"], all_cost["duplicator"]["total"])
+    logger.info("\tCost (total): %s", {"in": all_cost["total"]["in"], "out": all_cost["total"]["out"], "total": all_cost["total"]["total"]})
+    logger.info("\tCost (saved by cacher): %s", {"in": all_cost["cacher"]["in"], "out": all_cost["cacher"]["out"], "total": all_cost["cacher"]["total"]})
+    logger.info("\tCost (saved by deduplicator): %s\n", {"in": all_cost["duplicator"]["in"], "out": all_cost["duplicator"]["out"], "total": all_cost["duplicator"]["total"]})
 
 
 
     
     # Total duration
-    logger.info("Total clocktime (in seconds): %f", clocktime)
-    logger.info("Individual durations of each sample (in seconds): %s\n", list(durations))
+    logger.info("Duration:")
+    logger.info("\tTotal clocktime (in seconds): %f", clocktime)
+    logger.info("\tIndividual durations of each sample (in seconds): %s\n", list(durations))
 
-    # Evaluations
+    # Quality information
     correct = [max(agent_result[1] for agent_result in e) for e in evaluations]
-    logger.info("Correct: %s", correct)
-    logger.info("Average correctness: %f", sum(correct) / len(correct))
+    logger.info("Quality:")
+    logger.info("\tCorrect: %s", correct)
+    logger.info("\tAverage correctness: %f", sum(correct) / len(correct))
 
 def remove_parentheses(text: str) -> str:
     """
@@ -410,7 +428,3 @@ def remove_parentheses(text: str) -> str:
     cleaned = re.sub(r"(\n)[ \t]+", r"\1", cleaned)   # spaces after newline
     cleaned = cleaned.strip()
     return cleaned
-
-
-    
-    

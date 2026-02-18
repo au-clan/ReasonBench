@@ -54,7 +54,7 @@ class EnvironmentSciBench(Environment):
         """
         final = EnvironmentSciBench.is_final(state)
         
-        if final:
+        if final and len(state.steps)>0:
             return True, verify_answer(state.answer, state.steps[-1])
         else:
             return False, 0.0

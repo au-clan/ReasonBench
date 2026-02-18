@@ -33,7 +33,6 @@ class MethodReact(Method):
         state = state.clone(randomness=random.randint(0, MAX_SEED))
         
         for step in range(self.num_steps):
-            print(f"Step {step} ({idx})")
 
             # Generate action using the step agent
             action = await self.step_agent.act(
@@ -45,8 +44,11 @@ class MethodReact(Method):
                 params = self.step_params)
             
             # Execute the action
-            state = self.env.step(state, action[0])
+            try:
+                state = self.env.step(state, action[0])
 
-            if self.env.evaluate(state)[1] == 1:
-                break
+                if self.env.evaluate(state)[1] == 1:
+                    break
+            except:
+                pass
         return [state]

@@ -41,6 +41,7 @@ rap:
   num_samples: 5
   num_evaluations: 3
   exploration_constant: 1.0
+  max_depth: 10
 
 react:
   num_steps: 10

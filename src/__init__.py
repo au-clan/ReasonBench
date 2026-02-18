@@ -83,7 +83,7 @@ class MethodFactory:
             agents = {
                 "step": AgentFactory.get("io", benchmark),
             }
-        elif method == "cot":
+        elif method in ["cot", "cot_sc"]:
             agents = {
                 "step": AgentFactory.get("cot", benchmark),
             }

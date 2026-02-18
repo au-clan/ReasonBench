@@ -23,14 +23,14 @@ from src.typedefs import DecodingParameters
 from src.utils import initial_logging, final_logging
 
 
-async def run(args, trial, cache_path):
+async def run(args, cache_path):
     
     # Cache directory
     os.makedirs(os.path.dirname(cache_path), exist_ok=True)
     cache = Cache(cache_path)
 
     # Model
-    model = OnlineLLM(provider=args.provider)
+    model = OnlineLLM(provider=args.provider, api_key=args.api_key, reasoning_effort=args.reasoning_effort)
 
     # Pipeline
     pipeline = OnlineAPI(
@@ -51,7 +51,7 @@ async def run(args, trial, cache_path):
 
     # Decoding Parameters
     params = DecodingParameters(
-        temperature=args.temperature,
+        temperature=1.0 if args.model.startswith("gpt-5") else args.temperature, # GPT-5* limited to temperature 1.0
         max_completion_tokens=args.max_completion_tokens,
         top_p=args.top_p,
         stop=args.stop,
@@ -82,12 +82,19 @@ async def run(args, trial, cache_path):
 
         # Clean the API costs and update the log_path (not the cache though)
         api.clean()
+        if args.reasoning_effort:
+            calls_path = f"logs/raw_calls/simple/{args.model}_{args.reasoning_effort}/{args.benchmark}/{args.method}_{args.split}_{i}.log"
+        else:
+            calls_path = f"logs/raw_calls/simple/{args.model}/{args.benchmark}/{args.method}_{args.split}_{i}.log"
         api.update_log_path(
-            log_path=f"logs/raw_calls/simple/{args.model}/{args.benchmark}/{args.method}_{args.split}_{i}.log"
+            log_path=calls_path
         )
         
         # Initial logging
-        log_path = f"logs/repeats/{args.model}/{args.benchmark}/{args.method}_{args.split}_{i}.log"
+        if args.reasoning_effort:
+            log_path = f"logs/repeats/{args.model}_{args.reasoning_effort}/{args.benchmark}/{args.method}_{args.split}_{i}.log"
+        else:
+            log_path = f"logs/repeats/{args.model}/{args.benchmark}/{args.method}_{args.split}_{i}.log"
         initial_logging(logger, args, log_path)
 
         # Start timing
@@ -124,7 +131,9 @@ if __name__ == "__main__":
     parser.add_argument("--value_cache", action="store_true")
 
     parser.add_argument("--provider", type=str)
+    parser.add_argument("--api_key", type=str)
     parser.add_argument("--model", type=str)
+    parser.add_argument("--reasoning_effort", type=str, default=None)
     parser.add_argument("--temperature", type=float)
     parser.add_argument("--max_completion_tokens", type=int)
     parser.add_argument("--top_p", type=float)
@@ -140,5 +149,9 @@ if __name__ == "__main__":
 
     if args.ns_ratio > 1.0 or args.ns_ratio < 0.0:
         raise ValueError("ns_ratio must be between 0.0 and 1.0")
+    
+    cache_path = "caches/developpi"
+    if args.reasoning_effort:
+        cache_path = f"{cache_path}_{args.reasoning_effort}"
 
-    asyncio.run(run(args, trial=0, cache_path="caches/developping"))
+    asyncio.run(run(args, cache_path=cache_path))

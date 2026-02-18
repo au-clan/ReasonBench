@@ -1,0 +1,14 @@
+data
+caches
+.cache
+logs
+zzz*
+*.pyc
+local
+.DS_Store
+.venv
+.env
+secret.py
+__pycache__
+.nfs*
+datasets/dataset_wildchat.csv.gz

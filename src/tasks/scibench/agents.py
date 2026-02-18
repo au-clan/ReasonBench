@@ -41,7 +41,13 @@ class AgentIoSciBench(Agent):
         ]
         
         summary_responses = await asyncio.gather(*summary_coroutines)
-        proposals = [r[0].strip(" .,\n*$") for r in summary_responses]
+        proposals = []
+        for r in summary_responses:
+            try:
+                proposal = r[0].strip(" .,\n*$")
+                proposals.append(proposal)
+            except:
+                continue
         return proposals
     
 @AgentFactory.register

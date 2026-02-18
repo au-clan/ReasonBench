@@ -2,6 +2,7 @@ import random
 import logging
 import asyncio
 from typing import TypedDict
+from collections import Counter
 from omegaconf import OmegaConf
 from ..typedefs import Method, Model, Agent, Environment, DecodingParameters, State, Benchmark, MAX_SEED
 from .. import MethodFactory, AgentDictFactory
@@ -31,45 +32,23 @@ class MethodCOT_SC(Method):
         assert self.n > 1, "CoT-SC needs at least 2 outputs"
         
 
-    async def solve(self, idx: int, state: State, namespace: str):
+    async def solve(self, idx: int, state: State, namespace: str, value_cache: dict=None):
         randomness = idx
         random.seed(randomness)
 
-        states = [state.clone(randomness=random.randint(0, MAX_SEED)) for _ in range(self.n)]
+        actions = await self.step_agent.act(
+            model=self.model,
+            state=state,
+            n=self.n,
+            namespace=namespace,
+            request_id=f"idx{idx}-{hash(state)}",
+            params=self.step_params
+        )
 
-        action_coroutines = [
-            self.step_agent.act(
-                model=self.model,
-                state=state,
-                n=1,
-                namespace=namespace,
-                request_id=f"idx{idx}-{hash(state)}-agent{i}",
-                params=self.step_params
-            )
-            for i, state in enumerate(states)
-        ]
-        actions = await asyncio.gather(*action_coroutines)
+        votes = [action for action in actions]
+        counts = Counter(votes)
+        most_common_action = counts.most_common(1)[0][0]
+        state = self.env.step(state, most_common_action)
+        return [state]
 
-        # Execute the actions
-        states = [self.env.step(state, action[0]) for state, action in zip(states, actions)]
-        return states
-
-    async def benchmark(self, benchmark: Benchmark, ns_ratio: bool = False):
-
-        # Set up Namespace distibution
-        n_shared = int(ns_ratio * len(benchmark))
-        n_unique = len(benchmark) - n_shared
-        namespaces = [f"benchmark_{0}" for _ in range(n_shared)] + [f"benchmark_{i+1}" for i in range(n_unique)]
-        random.seed(42)
-        random.shuffle(namespaces)
-
-        solve_coroutines = [
-            self.solve(
-                idx=index,
-                state=state,
-                namespace=ns
-            )
-            for (index, state), ns in zip(benchmark, namespaces)
-        ]
-        results = await asyncio.gather(*solve_coroutines)
-        return results
+    

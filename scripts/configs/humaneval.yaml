@@ -10,7 +10,7 @@ cot_sc:
 foa:
   num_agents: 4
   num_steps: 4
-  k: 1
+  k: 2
   backtrack: 0.5
   resampling: "linear"
   min_steps: 1
@@ -21,6 +21,13 @@ tot_bfs:
   num_selections: 5
   num_steps: 3
   num_evaluations: 3
+
+tot_dfs:
+  num_selections: 3
+  num_steps: 6
+  num_evaluations: 3
+  pruning_threshold: 0
+  max_iterations: 10
   
 got:
   num_selections: 2
@@ -29,8 +36,12 @@ got:
   num_evaluations: 1
   num_best: 2
 
+react:
+  num_steps: 10
+
 rap:
   num_iterations: 10
   num_samples: 5
   num_evaluations: 3
   exploration_constant: 1.0
+  max_depth: 10

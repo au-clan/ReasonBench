@@ -2,9 +2,10 @@
 ###---Prompts---###
 ###################
 
+# Adapted based on SciBench
 io = '''
 Instruction:
-You are given a science problem. Provide only the final numeric answer and not a mathematical expression. 
+You are given a science problem. Provide the final numeric answer and not a mathematical expression. 
 - Do not return formulas, fractions, square roots, or variables. 
 - Evaluate all expressions to a single numeric value. 
 - Round the result to a reasonable number of significant figures if necessary.
@@ -19,6 +20,7 @@ Input:
 Output:
 '''
 
+# Adapted based on SciBench
 cot = '''
 Given a science problem, your task is to answer the question step-by-step in a clear and specific manner.
 The format of the solution is limited to the exact following: "Solution: ...\nSummary: The final answer is $...$", where $...$ is your final answer without any explanations. The final answer must be a numeric value, not a mathematical expression.
