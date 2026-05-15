@@ -1,8 +1,8 @@
 import random
 import pandas as pd
 from typing import Tuple
-from langchain import Wikipedia
-from langchain.agents.react.base import DocstoreExplorer
+from langchain_community.docstore.wikipedia import Wikipedia
+from langchain_classic.agents.react.base import DocstoreExplorer
 
 from .state import StateHotpotQA
 from ... import BenchmarkFactory

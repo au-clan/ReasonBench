@@ -19,7 +19,7 @@ from openai import OpenAI
 OBS_CORRECT = "Answer is CORRECT."
 OBS_INCORRECT = "Answer is INCORRECT."
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY_CLAN"), timeout=300, max_retries=1)
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), timeout=300, max_retries=1)
 cache = Cache(".cache/judge_cache")  # folder on disk
 JUDGE_MODEL = "o3-mini"
 

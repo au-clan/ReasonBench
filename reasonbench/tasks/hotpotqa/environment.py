@@ -2,7 +2,7 @@ import re
 import random
 import string
 from typing import Tuple
-from langchain.agents.react.base import DocstoreExplorer
+from langchain_classic.agents.react.base import DocstoreExplorer
 
 from .state import StateHotpotQA
 from ... import EnvironmentFactory

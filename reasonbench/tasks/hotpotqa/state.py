@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import List
-from langchain.agents.react.base import DocstoreExplorer
+from langchain_classic.agents.react.base import DocstoreExplorer
 
 from ...typedefs import State
 

@@ -5,10 +5,10 @@ import itertools
 from diskcache import Cache
 from cachesaver.pipelines import OnlineAPI
 
-from src.methods import AgentDictGOT, MethodGOT
-from src.models import API
-from src.typedefs import DecodingParameters
-from src.tasks.logiqa import (
+from reasonbench.methods import AgentDictGOT, MethodGOT
+from reasonbench.models import API
+from reasonbench.typedefs import DecodingParameters
+from reasonbench.tasks.logiqa import (
     EnvironmentLogiQA,
     AgentActLogiQA,
     AgentAggregateLogiQA,

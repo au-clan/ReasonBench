@@ -13,7 +13,7 @@ split="test"
 repeats=10
 
 provider="openai"
-api_key="OPENAI_API_KEY_CLAN"
+api_key="OPENAI_API_KEY"
 model="gpt-4.1-nano"
 
 source scripts/configs/$benchmark.env

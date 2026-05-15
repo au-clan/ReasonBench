@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reasonbench"
+version = "0.0.3"
+description = "Benchmark for evaluating the stability of LLM reasoning strategies"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "AU-CLAN"},
+]
+dependencies = [
+    "pandas",
+    "diskcache",
+    "omegaconf",
+    "together",
+    "openai",
+    "sympy",
+    "torch",
+    "langchain",
+    "langchain-community",
+    "wikipedia",
+    "joblib",
+    "pyphen",
+    "syllables",
+    "pronouncing",
+    "groq",
+    "lazykey",
+    "python-dotenv",
+    "cachesaver",
+    "huggingface-hub",
+    "setuptools<82",
+]
+
+[project.urls]
+Repository = "https://github.com/au-clan/ReasonBench"
+
+[tool.setuptools.packages.find]
+include = ["reasonbench*"]
+
+[tool.setuptools.package-data]
+reasonbench = ["configs/*.yaml", "configs/*.env"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_test_loop_scope = "class"
+asyncio_default_fixture_loop_scope = "function"

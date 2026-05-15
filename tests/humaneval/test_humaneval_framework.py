@@ -1,5 +1,5 @@
-from src.tasks.humaneval import BenchmarkHumanEval, EnvironmentHumanEval
-from src.tasks.humaneval.state import StateHumanEval
+from reasonbench.tasks.humaneval import BenchmarkHumanEval, EnvironmentHumanEval
+from reasonbench.tasks.humaneval.state import StateHumanEval
 
 import pytest
 

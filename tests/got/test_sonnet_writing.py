@@ -7,12 +7,12 @@ from diskcache import Cache
 from cachesaver.pipelines import OnlineAPI
 import itertools
 
-from src.methods import AgentDictGOT, MethodGOT
-from src.models import API
-from src.tasks.game24 import benchmark
-from src.tasks.sonnetwriting.benchmark import BenchmarkSonnetWriting
-from src.typedefs import Method, DecodingParameters
-from src.tasks.sonnetwriting import (
+from reasonbench.methods import AgentDictGOT, MethodGOT
+from reasonbench.models import API
+from reasonbench.tasks.game24 import benchmark
+from reasonbench.tasks.sonnetwriting.benchmark import BenchmarkSonnetWriting
+from reasonbench.typedefs import Method, DecodingParameters
+from reasonbench.tasks.sonnetwriting import (
     EnvironmentSonnetWriting,
     AgentActSonnetWriting,
     AgentAggregateSonnetWriting,

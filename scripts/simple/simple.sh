@@ -5,7 +5,7 @@ method="tot_bfs"
 split="mini"
 
 provider="openai"
-api_key="OPENAI_API_KEY_CLAN"
+api_key="OPENAI_API_KEY"
 model="gpt-4.1-nano"
 
 # Decoding parameters

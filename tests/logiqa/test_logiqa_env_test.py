@@ -1,5 +1,5 @@
-from src.tasks.logiqa import BenchmarkLogiQA, EnvironmentLogiQA
-from src.tasks.logiqa.state import StateLogiQA
+from reasonbench.tasks.logiqa import BenchmarkLogiQA, EnvironmentLogiQA
+from reasonbench.tasks.logiqa.state import StateLogiQA
 
 import pytest
 

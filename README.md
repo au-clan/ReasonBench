@@ -77,7 +77,7 @@ pip install cachesaver
 Set your API keys as environment variables:
 
 ```bash
-export OPENAI_API_KEY_CLAN="sk-..."
+export OPENAI_API_KEY="sk-..."
 # and/or other provider keys
 ```
 
@@ -99,7 +99,7 @@ python scripts/simple/simple.py \
     --method tot_bfs \
     --split mini \
     --provider openai \
-    --api_key OPENAI_API_KEY_CLAN \
+    --api_key OPENAI_API_KEY \
     --model gpt-4.1-nano \
     --temperature 1.0 \
     --max_completion_tokens 10000 \
@@ -202,10 +202,10 @@ Tests use async fixtures and require valid API keys (Groq/OpenAI) for the mock L
 ## Citation
 
 ```bibtex
-@inproceedings{reasonbench2025,
-  title={ReasonBENCH: Benchmarking the (In)Stability of LLM Reasoning},
-  author={Anonymous},
-  year={2025},
-  note={Under review at ICML}
+@article{potamitis2025reasonbench,
+  title={ReasonBENCH: Benchmarking the (In) Stability of LLM Reasoning},
+  author={Potamitis, Nearchos and Klein, Lars and Arora, Akhil},
+  journal={arXiv preprint arXiv:2512.07795},
+  year={2025}
 }
 ```

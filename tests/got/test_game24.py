@@ -6,10 +6,10 @@ import tempfile
 from diskcache import Cache
 from cachesaver.pipelines import OnlineAPI
 
-from src.methods import AgentDictGOT, MethodGOT
-from src.models import API
-from src.typedefs import DecodingParameters
-from src.tasks.game24 import (
+from reasonbench.methods import AgentDictGOT, MethodGOT
+from reasonbench.models import API
+from reasonbench.typedefs import DecodingParameters
+from reasonbench.tasks.game24 import (
     EnvironmentGame24,
     AgentBfsGame24,
     AgentAggregateGame24,

@@ -10,7 +10,7 @@ import pytest
 import tempfile
 from diskcache import Cache
 
-from src.typedefs import Model, DecodingParameters
+from reasonbench.typedefs import Model, DecodingParameters
 
 
 class MockLLM(Model):

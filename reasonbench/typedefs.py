@@ -7,7 +7,7 @@ from omegaconf import OmegaConf
 from cachesaver.typedefs import Batch, Response, SingleRequestModel, BatchRequestModel
 from cachesaver.typedefs import Request #as CacheSaverRequest
 from torch.utils.data import Dataset
-from src.utils import timed
+from reasonbench.utils import timed
 
 MAX_SEED = 10000
 
