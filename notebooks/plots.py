@@ -145,10 +145,11 @@ def plot_errorbar(
     ax.set_xticklabels([str(b) for b in benchmarks])
     #ax.set_xlabel(benchmark_col)
     ax.set_ylabel(f"Quality", fontsize=Y_LABEL_FONT)
-    ax.legend(frameon=False, ncol=min(4, len(methods)), fontsize=LEGEND_FONT)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.margins(x=0.05)
+
+    ax.legend(frameon=False, ncol=min(4, len(methods)), fontsize=LEGEND_FONT, loc="best")
 
     ax.tick_params(axis='x', labelsize=X_TICK_FONT)
     ax.tick_params(axis='y', labelsize=Y_TICK_FONT)
